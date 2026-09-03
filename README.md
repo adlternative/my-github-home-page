@@ -44,7 +44,7 @@ token 只存在本机 `chrome.storage.local`，不走同步，只发给 `api.git
 ## 工作原理
 
 ```
-content.js  ──port──▶  background.js  ──▶  api.github.com/user/following
+content.js  ──port──▶  background.js  ──▶  api.github.com/users/{me}/following
  (渲染 DOM)            (抓取 + 缓存)   ──▶  api.github.com/users/{u}/events/public   (有 token)
                            │           ──▶  github.com/{u}.atom                       (无 token)
                            ▼
