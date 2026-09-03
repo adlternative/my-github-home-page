@@ -47,6 +47,14 @@
     document.body.classList.toggle('fd-hide-copilot', STATE.hideCopilot);
   }
 
+  // 页面进入 bfcache 前主动断开，避免 "message channel is closed" 警告
+  window.addEventListener('pagehide', () => {
+    if (STATE.port) {
+      try { STATE.port.disconnect(); } catch (_) { /* noop */ }
+      STATE.port = null;
+    }
+  });
+
   document.addEventListener('turbo:load', ensure);
   document.addEventListener('soft-nav:end', ensure);
   ensure();
@@ -148,6 +156,7 @@
       }
     });
     port.onDisconnect.addListener(() => {
+      void chrome.runtime.lastError;
       if (STATE.port === port) STATE.port = null;
     });
     port.postMessage({ login, days: STATE.days, lang: STATE.lang, force });

@@ -43,9 +43,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 // content script 用长连接拿进度 + 结果
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== 'digest') return;
+  // 页面跳走 / 进入 bfcache 时 port 会被关掉；之后不能再 postMessage，否则控制台报 runtime.lastError
+  let closed = false;
+  port.onDisconnect.addListener(() => {
+    closed = true;
+    void chrome.runtime.lastError; // 读一下就不会有 "Unchecked runtime.lastError" 警告
+  });
   port.onMessage.addListener(async (req) => {
     const post = (m) => {
-      try { port.postMessage(m); } catch (_) { /* 页面已经跳走 */ }
+      if (closed) return;
+      try { port.postMessage(m); } catch (_) { closed = true; }
     };
     try {
       const result = await buildDigest(req, (progress) => post({ progress }));
