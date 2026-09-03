@@ -154,9 +154,9 @@ test('summarize: English output and star merge', () => {
   ].map(S.normalizeRest);
   const out = S.summarize({ alice: { items } }, { nowMs: NOW, sinceMs: NOW - day, lang: 'en' });
   const u = out.users[0];
-  assert.equal(u.headline, '1 repos · 1 pushes · 2 stars · 1 forks');
-  assert.deepEqual(u.repos.map((r) => [r.type, r.name]), [['repo', 'o/r'], ['stars', 'Starred 2 repos'], ['forks', 'Forked 1 repos']]);
-  assert.equal(u.repos[0].lines[0].text, '1 pushes, 1 commits to main');
+  assert.equal(u.headline, '1 repo · 1 push · 2 stars · 1 fork');
+  assert.deepEqual(u.repos.map((r) => [r.type, r.name]), [['repo', 'o/r'], ['stars', 'Starred 2 repos'], ['forks', 'Forked 1 repo']]);
+  assert.equal(u.repos[0].lines[0].text, '1 push, 1 commit to main');
   assert.deepEqual(u.repos[1].repos.map((r) => r.name), ['x/y', 'x/z']);
 });
 
@@ -165,4 +165,15 @@ test('summarize: push with zero commits does not say "0 commits"', () => {
   ev.payload.size = 0;
   const out = S.summarize({ a: { items: [S.normalizeRest(ev)] } }, { nowMs: NOW, sinceMs: NOW - day, lang: 'zh' });
   assert.equal(out.users[0].repos[0].lines[0].text, '推送 1 次到 main');
+});
+
+test('i18n: plural tokens', () => {
+  const I = require('../src/i18n.js');
+  assert.equal(I.t('en', 'headline.repos', { n: 1 }), '1 repo');
+  assert.equal(I.t('en', 'headline.repos', { n: 3 }), '3 repos');
+  assert.equal(I.t('en', 'line.push', { n: 1, c: 2, to: ' to main' }), '1 push, 2 commits to main');
+  assert.equal(I.t('zh', 'headline.repos', { n: 1 }), '1 个仓库');
+  assert.equal(I.resolve('auto', 'zh-CN'), 'zh');
+  assert.equal(I.resolve('auto', 'en-US'), 'en');
+  assert.equal(I.resolve('zh', 'en-US'), 'zh');
 });

@@ -65,21 +65,21 @@
     'kind.create_tag': 'Tag', 'kind.delete_branch': 'Branch deleted', 'kind.delete_tag': 'Tag deleted', 'kind.release': 'Release', 'kind.star': 'Star',
     'kind.fork': 'Fork', 'kind.public': 'Made public', 'kind.commit_comment': 'Commit comment', 'kind.wiki': 'Wiki', 'kind.member': 'Collaborator', 'kind.other': 'Other',
 
-    'headline.repos': '{n} repos', 'headline.pushes': '{n} pushes', 'headline.prs': '{n} PRs', 'headline.reviews': '{n} reviews',
-    'headline.issues': '{n} issues', 'headline.releases': '{n} releases', 'headline.stars': '{n} stars', 'headline.forks': '{n} forks',
+    'headline.repos': '{n} {n:repo|repos}', 'headline.pushes': '{n} {n:push|pushes}', 'headline.prs': '{n} {n:PR|PRs}', 'headline.reviews': '{n} {n:review|reviews}',
+    'headline.issues': '{n} {n:issue|issues}', 'headline.releases': '{n} {n:release|releases}', 'headline.stars': '{n} {n:star|stars}', 'headline.forks': '{n} {n:fork|forks}',
 
-    'line.push': '{n} pushes, {c} commits{to}', 'line.push_nocommits': '{n} pushes{to}', 'line.push_to': ' to {branches}', 'line.etc': ' …',
+    'line.push': '{n} {n:push|pushes}, {c} {c:commit|commits}{to}', 'line.push_nocommits': '{n} {n:push|pushes}{to}', 'line.push_to': ' to {branches}', 'line.etc': ' …',
     'verb.pr_merge': 'Merged', 'verb.pr_open': 'Opened', 'verb.pr_close': 'Closed', 'verb.pr_other': 'Updated',
     'verb.issue_open': 'Opened', 'verb.issue_close': 'Closed', 'verb.issue_other': 'Updated',
     'noun.pr': 'PR', 'noun.issue': 'issue', 'line.numbered': '{verb} {noun} #{n}{title}', 'line.title_sep': ': ',
-    'line.more_numbered': '…{n} more {noun}s',
-    'line.reviews': 'Reviewed {n} PRs{ex}', 'line.pr_comments': '{n} comments on PRs{ex}', 'line.issue_comments': '{n} comments on issues{ex}',
+    'line.more_numbered': '…{n} more {noun}{n:|s}',
+    'line.reviews': 'Reviewed {n} {n:PR|PRs}{ex}', 'line.pr_comments': '{n} {n:comment|comments} on PRs{ex}', 'line.issue_comments': '{n} {n:comment|comments} on issues{ex}',
     'line.release': 'Released {name}', 'line.tags': 'Tagged {tags}', 'line.new_branches': 'New branches {b}{more}', 'line.deleted_branches': 'Deleted branches {b}{more}',
     'line.more_n': ' +{n} more', 'line.create_repo': 'Created this repo', 'line.public': 'Made this repo public', 'line.fork': 'Forked this repo',
-    'line.star': 'Starred this repo', 'line.wiki': 'Updated the wiki', 'line.commit_comments': '{n} commit comments', 'line.member': 'Added a collaborator',
-    'stars.title': 'Starred {n} repos', 'forks.title': 'Forked {n} repos',
+    'line.star': 'Starred this repo', 'line.wiki': 'Updated the wiki', 'line.commit_comments': '{n} commit {n:comment|comments}', 'line.member': 'Added a collaborator',
+    'stars.title': 'Starred {n} {n:repo|repos}', 'forks.title': 'Forked {n} {n:repo|repos}',
 
-    'ui.title': 'What people you follow are doing', 'ui.days': 'Last {n} days', 'ui.days_title': 'Time range',
+    'ui.title': 'What people you follow are doing', 'ui.days': 'Last {n} {n:day|days}', 'ui.days_title': 'Time range',
     'ui.expand_all': 'Expand all', 'ui.collapse_all': 'Collapse all', 'ui.expand_title': 'Expand / collapse everyone',
     'ui.refresh': 'Refresh', 'ui.refresh_title': 'Re-fetch everyone\'s activity', 'ui.show_feed': 'Show original feed', 'ui.hide_feed': 'Hide original feed',
     'ui.feed_title': 'Show / hide GitHub\'s own feed', 'ui.settings': 'Settings',
@@ -87,8 +87,8 @@
     'ui.status': '{active} active · {quiet} quiet · {total} followed', 'ui.no_token_mode': 'no token', 'ui.rate': 'API quota {r}/{l}',
     'ui.notice_no_token_1': 'No token configured: only the last 30 events per person are visible and some PR titles are missing. ', 'ui.notice_no_token_link': 'Add a token in settings',
     'ui.notice_no_token_2': ' (read-only, no permissions needed) to get 300 events / 90 days per person.',
-    'ui.fetch_errors': '{n} users failed to load: {list}', 'ui.empty': 'Nobody you follow had public activity in the last {n} days. Try a wider time range.',
-    'ui.quiet': '{n} people had no public activity in the last {d} days', 'ui.more_repos': '…{n} more repos', 'ui.more_commits': '…{n} more commits',
+    'ui.fetch_errors': '{n} {n:user|users} failed to load: {list}', 'ui.empty': 'Nobody you follow had public activity in the last {n} {n:day|days}. Try a wider time range.',
+    'ui.quiet': '{n} {n:person|people} had no public activity in the last {d} {d:day|days}', 'ui.more_repos': '…{n} more {n:repo|repos}', 'ui.more_commits': '…{n} more {n:commit|commits}',
     'time.now': 'just now', 'time.minutes': '{n}m ago', 'time.hours': '{n}h ago', 'time.days': '{n}d ago',
 
     'err.following': 'Failed to load who you follow: {status} {msg}', 'err.rate_limit': 'API quota exhausted, resets at {time}', 'err.forbidden': 'Forbidden: {status} {msg}',
@@ -107,7 +107,11 @@
   function t(lang, key, params) {
     const table = messages[lang] || en;
     let s = table[key] != null ? table[key] : en[key] != null ? en[key] : key;
-    if (params) for (const k of Object.keys(params)) s = s.split(`{${k}}`).join(String(params[k]));
+    if (params) {
+      // 复数：{n:repo|repos} 按 params.n 是否为 1 二选一
+      s = s.replace(/\{(\w+):([^|}]*)\|([^}]*)\}/g, (_, k, one, other) => (Number(params[k]) === 1 ? one : other));
+      for (const k of Object.keys(params)) s = s.split(`{${k}}`).join(String(params[k]));
+    }
     return s;
   }
 

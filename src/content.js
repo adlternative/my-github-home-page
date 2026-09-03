@@ -184,7 +184,9 @@
 
     // 折叠态预览：前 3 个仓库 + 各自的动作 chip
     const preview = h('ul', { class: 'fd-preview' });
-    for (const r of u.repos.slice(0, 3)) {
+    // 预览固定最多 3 行：仓库正好 3 个就全显示，更多则显示 2 个 + 一行「还有 N 个」
+    const shownRepos = u.repos.length > 3 ? 2 : u.repos.length;
+    for (const r of u.repos.slice(0, shownRepos)) {
       preview.append(
         h('li', {}, [
           h('span', { class: 'fd-preview-repo', title: r.name }, r.type === 'repo' ? shortRepo(r.name, u.login) : r.name),
@@ -192,7 +194,7 @@
         ]),
       );
     }
-    if (u.repos.length > 3) preview.append(h('li', { class: 'fd-more' }, T('ui.more_repos', { n: u.repos.length - 3 })));
+    if (u.repos.length > shownRepos) preview.append(h('li', { class: 'fd-more' }, T('ui.more_repos', { n: u.repos.length - shownRepos })));
 
     const login = h('a', { class: 'fd-login', href: `https://github.com/${u.login}` }, u.login);
     // 点用户名是跳转，不要触发折叠；点其它地方才折叠
