@@ -29,6 +29,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     checkToken(msg.token).then(sendResponse, (e) => sendResponse({ ok: false, error: String(e.message || e) }));
     return true;
   }
+  if (msg && msg.type === 'getProfiles') {
+    getProfiles(msg.logins || []).then(sendResponse, (e) => sendResponse({ ok: false, error: String(e.message || e) }));
+    return true;
+  }
   if (msg && msg.type === 'clearCache') {
     clearCache().then(() => sendResponse({ ok: true }));
     return true;
@@ -258,8 +262,39 @@ async function checkToken(token) {
   return { ok: true, login: u.login, rateLimit };
 }
 
+// ---------- followers 数（「知名度」排序用），需要 token，缓存 7 天 ----------
+
+const PROFILE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+async function getProfiles(logins) {
+  const { token } = await getSettings();
+  const keys = logins.map((l) => `profile:${l}`);
+  const cached = await chrome.storage.local.get(keys);
+  const now = Date.now();
+  const followers = {};
+  const missing = [];
+  for (const l of logins) {
+    const c = cached[`profile:${l}`];
+    if (c && now - c.fetchedAt < PROFILE_TTL_MS) followers[l] = c.followers;
+    else missing.push(l);
+  }
+  if (!token) return { ok: !missing.length, needToken: !!missing.length, followers };
+  const updates = {};
+  await runPool(missing, CONCURRENCY, async (l) => {
+    try {
+      const res = await ghFetch(`${API}/users/${encodeURIComponent(l)}`, token);
+      if (!res.ok) return;
+      const u = await res.json();
+      followers[l] = u.followers || 0;
+      updates[`profile:${l}`] = { followers: u.followers || 0, fetchedAt: now };
+    } catch (_) { /* 单个失败不影响整体 */ }
+  });
+  if (Object.keys(updates).length) await chrome.storage.local.set(updates);
+  return { ok: true, followers };
+}
+
 async function clearCache() {
   const all = await chrome.storage.local.get(null);
-  const keys = Object.keys(all).filter((k) => k.startsWith('events:') || k.startsWith('following:'));
+  const keys = Object.keys(all).filter((k) => k.startsWith('events:') || k.startsWith('following:') || k.startsWith('profile:'));
   if (keys.length) await chrome.storage.local.remove(keys);
 }

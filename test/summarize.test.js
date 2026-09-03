@@ -177,3 +177,24 @@ test('i18n: plural tokens', () => {
   assert.equal(I.resolve('auto', 'en-US'), 'en');
   assert.equal(I.resolve('zh', 'en-US'), 'zh');
 });
+
+test('applyView: filter and sort', () => {
+  const mk = (login, kinds, hoursAgo, repo = 'o/r') => S.normalizeRest(kinds === 'star'
+    ? { type: 'WatchEvent', actor: { login }, repo: { name: repo }, created_at: at(hoursAgo), payload: {} }
+    : { ...push(repo, 'main', ['x'], hoursAgo), actor: { login } });
+  const byUser = {
+    coder: { items: [mk('coder', 'push', 5), mk('coder', 'push', 6, 'o/z')] },
+    starrer: { items: [mk('starrer', 'star', 1)] },
+    both: { items: [mk('both', 'push', 2, 'x/lib'), mk('both', 'star', 3)] },
+  };
+  const { users } = S.summarize(byUser, { nowMs: NOW, sinceMs: NOW - day, lang: 'en' });
+  const names = (v) => S.applyView(users, v).map((u) => u.login);
+  assert.deepEqual(names({ sort: 'latest' }), ['starrer', 'both', 'coder']);
+  assert.deepEqual(names({ sort: 'count' }), ['coder', 'both', 'starrer']);
+  assert.deepEqual(names({ sort: 'login' }), ['both', 'coder', 'starrer']);
+  assert.deepEqual(names({ sort: 'followers', followers: { starrer: 10, coder: 500, both: 50 } }), ['coder', 'both', 'starrer']);
+  assert.deepEqual(names({ filter: 'code' }), ['both', 'coder']);
+  assert.deepEqual(names({ filter: 'nostar' }), ['both', 'coder']);
+  assert.deepEqual(names({ query: 'LIB' }), ['both']);
+  assert.deepEqual(names({ query: 'star' }), ['starrer']);
+});

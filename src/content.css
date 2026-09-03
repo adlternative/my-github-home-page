@@ -15,6 +15,27 @@
   font-size: 16px;
   font-weight: 600;
 }
+#fd-root .fd-toolbar--view {
+  margin-top: -4px;
+}
+#fd-root .fd-search {
+  flex: 1 1 200px;
+  min-width: 120px;
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--borderColor-default, #d1d9e0);
+  background: var(--bgColor-default, #fff);
+  color: var(--fgColor-default, #1f2328);
+}
+#fd-root .fd-search:focus { outline: 2px solid var(--focus-outlineColor, #0969da); outline-offset: -1px; }
+#fd-root .fd-followers {
+  font-size: 11px;
+  color: var(--fgColor-muted, #59636e);
+  margin-left: 6px;
+  vertical-align: top;
+}
 #fd-root .fd-status {
   font-size: 12px;
   color: var(--fgColor-muted, #59636e);

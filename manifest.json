@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "permissions": ["storage", "unlimitedStorage"],
@@ -10,7 +10,7 @@
   "content_scripts": [
     {
       "matches": ["https://github.com/*"],
-      "js": ["src/i18n.js", "src/content.js"],
+      "js": ["src/i18n.js", "src/summarize.js", "src/content.js"],
       "css": ["src/content.css"],
       "run_at": "document_idle"
     }

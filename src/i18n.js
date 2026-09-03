@@ -43,6 +43,9 @@
     'ui.notice_no_token_2': '（只读、无需任何权限）可以拿到每人 300 条、90 天的完整数据。',
     'ui.fetch_errors': '有 {n} 个用户抓取失败：{list}', 'ui.empty': '最近 {n} 天你关注的人都没有公开动态。试试把时间范围调大。',
     'ui.quiet': '{n} 人最近 {d} 天没有公开动态', 'ui.more_repos': '…还有 {n} 个仓库', 'ui.more_commits': '…还有 {n} 个提交',
+    'ui.search_placeholder': '搜人或仓库…', 'ui.filter_all': '全部', 'ui.filter_code': '只看写代码的', 'ui.filter_nostar': '隐藏只 star 的',
+    'ui.sort_latest': '最近活跃', 'ui.sort_count': '活动量', 'ui.sort_followers': '知名度', 'ui.sort_login': '名字', 'ui.sort_title': '排序', 'ui.filter_title': '过滤',
+    'ui.followers': '{n} followers', 'ui.followers_need_token': '按知名度排序需要配置 token（拉取 followers 数）', 'ui.no_match': '没有匹配的人。',
     'time.now': '刚刚', 'time.minutes': '{n} 分钟前', 'time.hours': '{n} 小时前', 'time.days': '{n} 天前',
 
     // background 错误
@@ -89,6 +92,9 @@
     'ui.notice_no_token_2': ' (read-only, no permissions needed) to get 300 events / 90 days per person.',
     'ui.fetch_errors': '{n} {n:user|users} failed to load: {list}', 'ui.empty': 'Nobody you follow had public activity in the last {n} {n:day|days}. Try a wider time range.',
     'ui.quiet': '{n} {n:person|people} had no public activity in the last {d} {d:day|days}', 'ui.more_repos': '…{n} more {n:repo|repos}', 'ui.more_commits': '…{n} more {n:commit|commits}',
+    'ui.search_placeholder': 'Search people or repos…', 'ui.filter_all': 'Everyone', 'ui.filter_code': 'Only coding activity', 'ui.filter_nostar': 'Hide star-only',
+    'ui.sort_latest': 'Most recent', 'ui.sort_count': 'Most active', 'ui.sort_followers': 'Most followed', 'ui.sort_login': 'Name', 'ui.sort_title': 'Sort', 'ui.filter_title': 'Filter',
+    'ui.followers': '{n} followers', 'ui.followers_need_token': 'Sorting by popularity needs a token (to fetch follower counts)', 'ui.no_match': 'Nobody matches.',
     'time.now': 'just now', 'time.minutes': '{n}m ago', 'time.hours': '{n}h ago', 'time.days': '{n}d ago',
 
     'err.following': 'Failed to load who you follow: {status} {msg}', 'err.rate_limit': 'API quota exhausted, resets at {time}', 'err.forbidden': 'Forbidden: {status} {msg}',

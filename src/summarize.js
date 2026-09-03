@@ -251,6 +251,7 @@
         avatar: entry.avatar || items[0].avatar,
         latest: maxAt(items),
         count: items.length,
+        score: items.reduce((w, it) => w + (KIND_WEIGHT[it.kind] ?? 1), 0), // 「活动量」排序用：写代码的事件权重高，star 很低
         counts,
         headline: userHeadline(repos, counts, items, T),
         repos,
@@ -440,6 +441,34 @@
     lines.push({ kind, text: T(key, { n: items.length, ex }), url: items[0].url });
   }
 
+  // ---------- 视图：过滤 / 排序（纯函数，content 每次切换都重新算） ----------
+
+  const CODE_KINDS = ['push', 'pr_open', 'pr_merge', 'pr_close', 'pr_review', 'issue_open', 'issue_close', 'release', 'create_tag', 'create_repo', 'public'];
+
+  /**
+   * @param {Array}  users     summarize() 输出的 users
+   * @param {object} view      { sort: 'latest'|'count'|'followers'|'login', filter: 'all'|'code'|'nostar', query: string, followers: {login: n} }
+   */
+  function applyView(users, view) {
+    const v = view || {};
+    const q = String(v.query || '').trim().toLowerCase();
+    const followers = v.followers || {};
+    let out = users.filter((u) => {
+      if (v.filter === 'code' && !CODE_KINDS.some((k) => u.counts[k])) return false;
+      if (v.filter === 'nostar' && Object.keys(u.counts).every((k) => PASSIVE.has(k))) return false;
+      if (q && !(u.login.toLowerCase().includes(q) || u.repos.some((r) => r.type === 'repo' && r.name.toLowerCase().includes(q)))) return false;
+      return true;
+    });
+    const by = {
+      latest: (a, b) => Date.parse(b.latest) - Date.parse(a.latest),
+      count: (a, b) => (b.score ?? b.count) - (a.score ?? a.count) || Date.parse(b.latest) - Date.parse(a.latest),
+      followers: (a, b) => (followers[b.login] || 0) - (followers[a.login] || 0) || Date.parse(b.latest) - Date.parse(a.latest),
+      login: (a, b) => a.login.localeCompare(b.login, undefined, { sensitivity: 'base' }),
+    };
+    out = out.slice().sort(by[v.sort] || by.latest);
+    return out;
+  }
+
   // ---------- 小工具 ----------
 
   function firstLine(s) {
@@ -484,5 +513,5 @@
     return isNaN(d) ? new Date(0).toISOString() : d.toISOString();
   }
 
-  return { normalizeRest, parseAtom, summarize, describeRepo, decodeEntities };
+  return { normalizeRest, parseAtom, summarize, applyView, describeRepo, decodeEntities };
 });

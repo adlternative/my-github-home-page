@@ -7,7 +7,7 @@
   'use strict';
 
   const DAY_OPTIONS = [1, 3, 7, 14, 30];
-  const STATE = { days: 7, hideFeed: true, hideCopilot: true, expandAll: false, lang: 'en', port: null };
+  const STATE = { days: 7, hideFeed: true, hideCopilot: true, expandAll: false, lang: 'en', port: null, sort: 'latest', filter: 'all', query: '', followers: {}, summary: null, meta: null };
   const T = (key, params) => GHI18n.t(STATE.lang, key, params);
 
   // ---------- 入口 / Turbo 导航 ----------
@@ -26,8 +26,10 @@
     const login = (document.querySelector('meta[name="user-login"]') || {}).content;
     if (!login) return;
 
-    const s = await chrome.storage.local.get(['days', 'hideFeed', 'hideCopilot', 'expandAll', 'lang']);
+    const s = await chrome.storage.local.get(['days', 'hideFeed', 'hideCopilot', 'expandAll', 'lang', 'sort', 'filter']);
     STATE.days = DAY_OPTIONS.includes(+s.days) ? +s.days : 7;
+    STATE.sort = ['latest', 'count', 'followers', 'login'].includes(s.sort) ? s.sort : 'latest';
+    STATE.filter = ['all', 'code', 'nostar'].includes(s.filter) ? s.filter : 'all';
     STATE.expandAll = s.expandAll === true;
     STATE.hideFeed = s.hideFeed !== false;
     STATE.hideCopilot = s.hideCopilot !== false;
@@ -87,8 +89,17 @@
     const settings = h('button', { type: 'button' }, T('ui.settings'));
     settings.addEventListener('click', () => chrome.runtime.sendMessage({ type: 'openOptions' }));
 
+    // 第二行：搜索 / 过滤 / 排序，纯客户端，不重新抓取
+    const search = h('input', { type: 'search', class: 'fd-search', placeholder: T('ui.search_placeholder'), 'aria-label': T('ui.search_placeholder') });
+    search.addEventListener('input', debounce(() => { STATE.query = search.value; rerender(); }, 150));
+    const filter = h('select', { title: T('ui.filter_title') }, ['all', 'code', 'nostar'].map((f) => h('option', { value: f, selected: f === STATE.filter ? '' : null }, T(`ui.filter_${f}`))));
+    filter.addEventListener('change', async () => { STATE.filter = filter.value; await chrome.storage.local.set({ filter: STATE.filter }); rerender(); });
+    const sort = h('select', { title: T('ui.sort_title') }, ['latest', 'count', 'followers', 'login'].map((k) => h('option', { value: k, selected: k === STATE.sort ? '' : null }, T(`ui.sort_${k}`))));
+    sort.addEventListener('change', async () => { STATE.sort = sort.value; await chrome.storage.local.set({ sort: STATE.sort }); if (STATE.sort === 'followers') await ensureFollowers(); rerender(); });
+
     root.append(
       h('div', { class: 'fd-toolbar' }, [h('h2', {}, T('ui.title')), h('span', { class: 'fd-status', id: 'fd-status' }, ''), select, expand, refresh, toggleFeed, settings]),
+      h('div', { class: 'fd-toolbar fd-toolbar--view' }, [search, filter, sort]),
       h('div', { class: 'fd-progress', id: 'fd-progress', hidden: '' }, [h('div')]),
       h('div', { id: 'fd-notice' }),
       h('div', { id: 'fd-body' }),
@@ -129,12 +140,35 @@
         showNotice(notice, m.error, true);
         return;
       }
-      if (m.done) renderSummary(m.summary, m.meta, notice, status);
+      if (m.done) {
+        STATE.summary = m.summary;
+        STATE.meta = m.meta;
+        if (STATE.sort === 'followers') ensureFollowers().then(rerender);
+        renderSummary(m.summary, m.meta, notice, status);
+      }
     });
     port.onDisconnect.addListener(() => {
       if (STATE.port === port) STATE.port = null;
     });
     port.postMessage({ login, days: STATE.days, lang: STATE.lang, force });
+  }
+
+  // 「知名度」排序需要 followers 数，按需向 background 要（有 token 才拉，缓存 7 天）
+  async function ensureFollowers() {
+    if (!STATE.summary) return;
+    const logins = STATE.summary.users.map((u) => u.login).filter((l) => STATE.followers[l] == null);
+    if (!logins.length) return;
+    const r = await chrome.runtime.sendMessage({ type: 'getProfiles', logins });
+    if (r && r.followers) Object.assign(STATE.followers, r.followers);
+    const notice = document.getElementById('fd-notice');
+    if (r && r.needToken && notice && !notice.querySelector('.fd-notice--followers')) {
+      notice.append(h('div', { class: 'fd-notice fd-notice--followers' }, T('ui.followers_need_token')));
+    }
+  }
+
+  function rerender() {
+    if (!STATE.summary) return;
+    renderBody(STATE.summary, STATE.meta);
   }
 
   function showNotice(container, text, isError) {
@@ -162,12 +196,21 @@
       notice.append(h('div', { class: 'fd-notice fd-error' }, T('ui.fetch_errors', { n: meta.errors.length, list: meta.errors.slice(0, 3).join('; ') + (meta.errors.length > 3 ? ' …' : '') })));
     }
 
+    renderBody(summary, meta);
+  }
+
+  function renderBody(summary, meta) {
+    const body = document.getElementById('fd-body');
+    if (!body) return;
     body.replaceChildren();
+    const users = GHSummary.applyView(summary.users, { sort: STATE.sort, filter: STATE.filter, query: STATE.query, followers: STATE.followers });
     if (!summary.users.length) {
       body.append(h('div', { class: 'fd-empty' }, T('ui.empty', { n: meta.days })));
+    } else if (!users.length) {
+      body.append(h('div', { class: 'fd-empty' }, T('ui.no_match')));
     }
     const grid = h('div', { class: 'fd-grid' });
-    for (const u of summary.users) grid.append(renderUser(u, meta));
+    for (const u of users) grid.append(renderUser(u, meta));
     body.append(grid);
     if (summary.quiet.length) {
       body.append(
@@ -204,7 +247,11 @@
       h('summary', {}, [
         h('div', { class: 'fd-user-head' }, [
           h('img', { class: 'fd-avatar', src: sizedAvatar(u.avatar), alt: '', loading: 'lazy' }),
-          h('div', { class: 'fd-user-text' }, [login, h('div', { class: 'fd-headline' }, u.headline)]),
+          h('div', { class: 'fd-user-text' }, [
+            login,
+            STATE.followers[u.login] != null ? h('span', { class: 'fd-followers' }, T('ui.followers', { n: compact(STATE.followers[u.login]) })) : null,
+            h('div', { class: 'fd-headline' }, u.headline),
+          ]),
           h('span', { class: 'fd-time', title: new Date(u.latest).toLocaleString() }, relTime(u.latest, meta.fetchedAt)),
         ]),
         preview,
@@ -295,6 +342,12 @@
     const d = Math.round(hh / 24);
     if (d < 30) return T('time.days', { n: d });
     return new Date(iso).toLocaleDateString();
+  }
+
+  function compact(n) {
+    if (n >= 1e6) return `${(n / 1e6).toFixed(1).replace(/\.0$/, '')}m`;
+    if (n >= 1e3) return `${(n / 1e3).toFixed(1).replace(/\.0$/, '')}k`;
+    return String(n);
   }
 
   function debounce(fn, ms) {
