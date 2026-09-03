@@ -1,0 +1,5 @@
+{
+  "extName": { "message": "Following Digest for GitHub" },
+  "extDescription": { "message": "Replace the GitHub home feed with a digest of what the people you follow did, grouped by person and repo." },
+  "actionTitle": { "message": "Following Digest settings" }
+}

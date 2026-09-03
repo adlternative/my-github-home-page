@@ -1,0 +1,5 @@
+{
+  "extName": { "message": "Following Digest for GitHub" },
+  "extDescription": { "message": "把 GitHub 首页的推荐 feed 换成「我关注的人 → 仓库 → 做了什么」的汇总。" },
+  "actionTitle": { "message": "Following Digest 设置" }
+}

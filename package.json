@@ -1,0 +1,10 @@
+{
+  "name": "following-digest-for-github",
+  "version": "0.1.0",
+  "private": true,
+  "description": "把 GitHub 首页的推荐 feed 换成「我关注的人 → 仓库 → 做了什么」的汇总",
+  "scripts": {
+    "test": "node --test 'test/**/*.test.js'",
+    "zip": "rm -f following-digest.zip && zip -r following-digest.zip manifest.json src -x '*.DS_Store'"
+  }
+}

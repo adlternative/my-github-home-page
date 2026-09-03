@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title data-i18n="opt.title">Following Digest</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; }
+    h1 { font-size: 20px; }
+    label { display: block; margin: 18px 0 6px; font-weight: 600; }
+    input[type=password], input[type=text], select { width: 100%; box-sizing: border-box; padding: 6px 8px; font: inherit; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .row input { flex: 1; }
+    .hint { color: #6a737d; font-size: 12px; margin-top: 4px; }
+    button { font: inherit; padding: 6px 12px; cursor: pointer; }
+    #msg { margin-top: 8px; font-size: 13px; min-height: 1.5em; }
+    .ok { color: #1a7f37; } .err { color: #cf222e; }
+    fieldset { border: 1px solid #d0d7de; border-radius: 6px; margin-top: 24px; }
+    fieldset label { font-weight: normal; margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <h1 data-i18n="opt.title"></h1>
+
+  <label for="lang" data-i18n="opt.lang_label"></label>
+  <select id="lang">
+    <option value="auto" data-i18n="opt.lang_auto"></option>
+    <option value="zh" data-i18n="opt.lang_zh"></option>
+    <option value="en" data-i18n="opt.lang_en"></option>
+  </select>
+
+  <label for="token" data-i18n="opt.token_label"></label>
+  <div class="row">
+    <input id="token" type="password" autocomplete="off" placeholder="github_pat_… / ghp_…">
+    <button id="check" type="button" data-i18n="opt.verify"></button>
+  </div>
+  <p class="hint">
+    <span data-i18n="opt.token_hint_1"></span><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">github.com/settings/personal-access-tokens/new</a><span data-i18n="opt.token_hint_2"></span>
+  </p>
+  <div id="msg"></div>
+
+  <label for="days" data-i18n="opt.days_label"></label>
+  <select id="days">
+    <option value="1"></option>
+    <option value="3"></option>
+    <option value="7"></option>
+    <option value="14"></option>
+    <option value="30"></option>
+  </select>
+
+  <fieldset>
+    <legend data-i18n="opt.layout"></legend>
+    <label><input id="hideFeed" type="checkbox"> <span data-i18n="opt.hide_feed"></span></label>
+    <label><input id="hideCopilot" type="checkbox"> <span data-i18n="opt.hide_copilot"></span></label>
+  </fieldset>
+
+  <p style="margin-top: 24px">
+    <button id="save" type="button" data-i18n="opt.save"></button>
+    <button id="clear" type="button" data-i18n="opt.clear"></button>
+  </p>
+
+  <script src="i18n.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
